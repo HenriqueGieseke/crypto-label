@@ -1,8 +1,13 @@
+import { MongoClient } from 'mongodb';
 import dbConnect from '../../../../lib/dbConnect';
 import { ProxyModel } from '../../../../models/Proxies';
 
 export default async function handler(req, res) {
   await dbConnect();
+
+  const client = new MongoClient(process.env.MONGODB_URI);
+  await client.connect();
+  const db = await client.db('cryptoLabelDb');
 
   const { method } = req;
 
@@ -10,18 +15,26 @@ export default async function handler(req, res) {
     case 'GET':
       try {
         if (req.body.address || req.body.username || req.body.port) {
-          const proxies = await ProxyModel.find({
-            $or: [
-              { address: { $regex: String(req.body.address), $options: 'i' } },
-              { port: { $regex: String(req.body.port), $options: 'i' } },
-              {
-                username: { $regex: String(req.body.username), $options: 'i' },
-              },
-            ],
-          });
+          const proxies = await db
+            .collection('proxies')
+            .find({
+              $or: [
+                {
+                  address: { $regex: String(req.body.address), $options: 'i' },
+                },
+                { port: { $regex: String(req.body.port), $options: 'i' } },
+                {
+                  username: {
+                    $regex: String(req.body.username),
+                    $options: 'i',
+                  },
+                },
+              ],
+            })
+            .toArray();
           res.status(200).json({ success: true, data: proxies });
         } else {
-          const proxies = await ProxyModel.find({});
+          const proxies = await db.collection('proxies').find({}).toArray();
           res.status(200).send({ success: true, data: proxies });
         }
       } catch (error) {
