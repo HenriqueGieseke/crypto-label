@@ -1,10 +1,6 @@
 import { MongoClient, ObjectId } from 'mongodb';
-import dbConnect from '../../../../lib/dbConnect';
-import { ProxyModel } from '../../../../models/Proxies';
 
 export default async function handler(req, res) {
-  await dbConnect();
-
   const client = new MongoClient(process.env.MONGODB_URI);
   await client.connect();
   const db = await client.db('cryptoLabelDb');
@@ -84,7 +80,9 @@ export default async function handler(req, res) {
 
     case 'DELETE':
       try {
-        const deletedProxy = await ProxyModel.deleteOne({ _id: req.body.id });
+        const deletedProxy = await db
+          .collection('proxies')
+          .deleteOne({ _id: new ObjectId(req.body.id) });
         if (!deletedProxy) {
           return res.status(400).json({ success: false });
         }
