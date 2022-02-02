@@ -1,4 +1,4 @@
-import { MongoClient } from 'mongodb';
+import { MongoClient, ObjectId } from 'mongodb';
 import dbConnect from '../../../../lib/dbConnect';
 import { ProxyModel } from '../../../../models/Proxies';
 
@@ -64,19 +64,21 @@ export default async function handler(req, res) {
 
     case 'PUT':
       try {
-        const foundProxy = await ProxyModel.findByIdAndUpdate(
-          { _id: req.body.id },
-          req.body,
+        const foundProxy = await db.collection('proxies').findOneAndUpdate(
+          { _id: new ObjectId(req.body.id) },
+          { $set: { ...req.body.data } },
           {
             new: true,
           }
         );
+
+        console.log(foundProxy);
         if (!foundProxy) {
           return res.status(400).json({ success: false, message: 'not found' });
         }
         res.status(200).json({ success: true, data: foundProxy });
       } catch (error) {
-        res.status(400).json({ success: false, message: 'not found' });
+        res.status(400).json({ success: false, message: 'noooop found' });
       }
       break;
 
