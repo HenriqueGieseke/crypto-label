@@ -48,7 +48,7 @@ export default async function handler(req, res) {
         const { address, port, username, password } = req.body;
 
         if (!address && !port) throw 'invalid data';
-        const newData = await ProxyModel.create({
+        const newData = await db.collection('proxies').insertOne({
           address,
           port,
           username,
@@ -78,7 +78,7 @@ export default async function handler(req, res) {
         }
         res.status(200).json({ success: true, data: foundProxy });
       } catch (error) {
-        res.status(400).json({ success: false, message: 'noooop found' });
+        res.status(400).json({ success: false, error });
       }
       break;
 
